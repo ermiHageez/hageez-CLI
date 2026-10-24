@@ -1,0 +1,40 @@
+{
+  "name": "hageezai-cli",
+  "version": "1.0.0",
+  "description": "HageezAI — AI Software Engineering Platform that Understands, Builds and Improves with You",
+  "main": "dist/index.js",
+  "bin": {
+    "hageez": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "inquirer": "^10.1.8",
+    "figlet": "^1.7.0",
+    "simple-git": "^3.27.0",
+    "openai": "^4.0.0",
+    "@anthropic-ai/sdk": "^0.39.0"
+  },
+  "devDependencies": {
+    "@types/figlet": "^1.5.8",
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^22.5.0",
+    "typescript": "^5.5.4"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ermihageez/hageezai.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": ["dist"],
+  "keywords": ["hageezai", "ai", "code-generation", "llm", "cli", "software-engineering"],
+  "author": "ermihageez"
+}
