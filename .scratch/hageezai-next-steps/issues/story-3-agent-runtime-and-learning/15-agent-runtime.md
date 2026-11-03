@@ -4,13 +4,15 @@
 
 **Blocked by:** 14 — Docs, license, and Node floor.
 
-**Status:** ready-for-agent
+**Status:** resolved
+
+**Resolution:** Implemented and verified with `npm run lint`, `npm test` (109 passing), and `npm run build`.
 
 **Covers:** NEXT_STEPS Step 10.
 
-- [ ] An Agent definition carries its name, role, system prompt, optional connection/model override, inputs, outputs, and allowed tools.
-- [ ] `hageez agent run <name> "task"` returns a structured result containing the agent, status, artifacts, tokens, and optional error.
-- [ ] Agent execution uses the default model, provider timeout, retry, and error mapping.
-- [ ] A trivial agent run works end to end with the configured default model.
-- [ ] The existing Build pipeline behaviour is unchanged.
-- [ ] Tests cover successful and failing runs without a live provider.
+- [x] An Agent definition carries its name, role, system prompt, optional connection/model override, inputs, outputs, and allowed tools.
+- [x] `hageez agent run <name> "task"` returns a structured result containing the agent, status, artifacts, tokens, and optional error.
+- [x] Agent execution uses the default model, provider timeout, retry, and error mapping.
+- [x] A trivial agent run works end to end with the configured default model.
+- [x] The existing Build pipeline behaviour is unchanged.
+- [x] Tests cover successful and failing runs without a live provider.

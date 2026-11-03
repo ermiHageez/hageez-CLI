@@ -24,7 +24,7 @@ export async function runChat(): Promise<void> {
   console.log(chalk.dim('  Type /exit to end session'));
   console.log('');
   console.log(chalk.dim('  Project: ') + chalk.cyan(project.name));
-  console.log(chalk.dim('  Model:   ') + chalk.cyan(config.model));
+  console.log(chalk.dim('  Model:   ') + chalk.cyan(config.defaultModel.model));
   console.log(separator());
   console.log('');
 

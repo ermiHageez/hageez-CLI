@@ -43,12 +43,28 @@ _Avoid_: conversation, assistant session
 ### Models
 
 **Provider**:
-The vendor serving a language model: OpenAI, Anthropic, xAI (Grok), or Groq.
+The vendor or runtime serving a language model: OpenAI, Anthropic, xAI (Grok), Groq, an OpenAI-compatible endpoint, or local Ollama.
 _Avoid_: backend, API, engine
+
+**Connection**:
+A named Provider configuration with its endpoint, credential reference, timeout, concurrency, and model catalog.
+_Avoid_: provider entry, account
 
 **Model**:
 The specific model identifier sent to a Provider, such as `gpt-4o`.
 _Avoid_: LLM, engine
+
+**Agent**:
+One of the ten specialist roles in the Build graph: analyst, product-brief, pm, ux-designer, architect, project-context, build, code-review, qa-tests, or retrospective.
+_Avoid_: bot, persona, worker
+
+**Run**:
+One execution of a pipeline, recorded as a manifest plus Agent artifacts under `ai-learning/runs/`.
+_Avoid_: job, build attempt
+
+**Artifact**:
+An Agent's persisted output for a Run.
+_Avoid_: output file, result
 
 **Project Context**:
 The metadata produced by scanning a project: name, language, framework, database, build tool, branch, and file, line, and dependency counts.
@@ -83,3 +99,7 @@ _Avoid_: cache, store, context
 **Decision**:
 A named entry in Memory recording a chosen convention or approach.
 _Avoid_: memory item, note, rule
+
+**Skill**:
+A project or global instruction file that applies to named Agents and is injected into their prompts.
+_Avoid_: plugin, extension, rule

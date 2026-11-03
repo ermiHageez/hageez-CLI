@@ -300,6 +300,35 @@ async function executeCommand(cmd: string, args: string): Promise<void> {
   }
 }
 
+export function isSmallTalk(input: string): boolean {
+  const clean = input.trim().toLowerCase();
+  const greetings = new Set([
+    'hi',
+    'hello',
+    'hey',
+    'yo',
+    'sup',
+    'howdy',
+    'how are you',
+    'who are you',
+    'what can you do',
+    'good morning',
+    'good evening',
+    'good afternoon',
+    'help',
+  ]);
+  if (greetings.has(clean)) return true;
+  if (/^(hi|hello|hey)\b/i.test(clean) && clean.length <= 15) return true;
+  if (/(?:say|answer to my|reply to my)\s+(?:hi|hello|hey)/i.test(clean)) return true;
+  if (/^(i need to test|just testing|test test|can you answer|give me (?:an|the) answer)/i.test(clean) && !/(build|create|add|fix|refactor|implement|code|write)\b/i.test(clean)) {
+    return true;
+  }
+  if (clean.endsWith('?') && !/(build|create|add|fix|refactor|update|delete|implement|write|code|make)\b/i.test(clean)) {
+    return true;
+  }
+  return false;
+}
+
 export async function startRepl(config: any): Promise<void> {
   const commandHistory = loadHistory();
   let historyIndex = -1;
@@ -443,6 +472,16 @@ export async function startRepl(config: any): Promise<void> {
     commandHistory.push(command);
     saveHistory(commandHistory);
     historyIndex = -1;
+
+    // Small talk and plain questions go to Chat, not Build
+    if (isSmallTalk(command)) {
+      console.log('');
+      console.log(chalk.dim('  Notice: Conversational query routed to Chat. Build requires an engineering task.'));
+      console.log('');
+      await runChat();
+      console.log('');
+      continue;
+    }
 
     // Execute as build or plan task
     console.log('');

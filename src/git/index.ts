@@ -4,8 +4,8 @@ function getGit(cwd?: string): SimpleGit {
 return simpleGit(cwd ?? process.cwd());
 }
 
-export async function getGitDiff(stagedOnly: boolean): Promise<string> {
-const git = getGit();
+export async function getGitDiff(stagedOnly: boolean, cwd?: string): Promise<string> {
+const git = getGit(cwd);
 try {
 if (stagedOnly) {
 return await git.diff(['--staged']);

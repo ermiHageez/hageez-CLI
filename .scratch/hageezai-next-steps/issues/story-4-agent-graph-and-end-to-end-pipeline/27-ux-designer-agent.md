@@ -4,12 +4,14 @@
 
 **Blocked by:** 21 — Analyst agent; 25 — Product-brief agent.
 
-**Status:** ready-for-agent
+**Status:** resolved
+
+**Resolution:** Implemented and verified with `npm run lint`, `npm test` (109 passing), and `npm run build`.
 
 **Covers:** NEXT_STEPS Step 16c.
 
-- [ ] The frontend/UI trigger is detected from the project scan or the Task.
-- [ ] When triggered, the Agent consumes the analysis and brief and writes a UX artifact with screens, states, flows, and accessibility notes.
-- [ ] When not triggered, the Agent is recorded as skipped and the Run continues.
-- [ ] It writes artifacts only and runs through the orchestrator.
-- [ ] Tests cover triggered, skipped, and malformed-trigger cases.
+- [x] The frontend/UI trigger is detected from the project scan or the Task.
+- [x] When triggered, the Agent consumes the analysis and brief and writes a UX artifact with screens, states, flows, and accessibility notes.
+- [x] When not triggered, the Agent is recorded as skipped and the Run continues.
+- [x] It writes artifacts only and runs through the orchestrator.
+- [x] Tests cover triggered, skipped, and malformed-trigger cases.

@@ -4,13 +4,17 @@
 
 **Blocked by:** 02 — Secure config storage.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Covers:** NEXT_STEPS Step 7.
 
-- [ ] Cloud calls default to a 60-second timeout and accept a configured timeout; older configs fall back at call time.
-- [ ] Callers can pass an abort signal through every provider.
-- [ ] Rate limits, server errors, and connection timeouts retry at most three attempts with exponential backoff and jitter; authentication failures do not retry.
-- [ ] Provider failures map to `AUTH`, `RATE_LIMIT`, `TIMEOUT`, or `PROVIDER`; existing empty-response codes remain.
-- [ ] Anthropic receives the configured temperature, and reported token usage is returned.
-- [ ] Errors never contain API keys or request bodies, and tests use fake transports without network access.
+- [x] Cloud calls default to a 60-second timeout and accept a configured timeout; older configs fall back at call time.
+- [x] Callers can pass an abort signal through every provider.
+- [x] Rate limits, server errors, and connection timeouts retry at most three attempts with exponential backoff and jitter; authentication failures do not retry.
+- [x] Provider failures map to `AUTH`, `RATE_LIMIT`, `TIMEOUT`, or `PROVIDER`; existing empty-response codes remain.
+- [x] Anthropic receives the configured temperature, and reported token usage is returned.
+- [x] Errors never contain API keys or request bodies, and tests use fake transports without network access.
+
+## Comments
+
+- 2026-10-24: Implemented in Story 1. `npm run lint`, `npm test` (58 tests), and `npm run build` pass.

@@ -1,9 +1,9 @@
-# Builder writes files directly, without a sandbox or diff approval
+# Builder writes files directly; the sandbox claim was removed
 
-The Build pipeline writes generated files to disk immediately (`writeFiles` in `src/builder/index.ts`), with no dry run, diff confirmation, or isolated workspace, although the startup and dashboard footers claim "Sandbox: Enabled". Direct write is the v1 trust model; users must build in a clean VCS tree and inspect the result afterward. Introducing approval or a real sandbox would supersede this decision.
+The v1 trust model is direct writes: approved Build changes go straight to disk, with no isolated workspace or sandbox. The old startup and dashboard "Sandbox: Enabled" claims were false and have been removed. This decision is superseded in part by ADR-0004: Build now previews diffs and requires per-file approval, but approved writes are still direct and there is still no sandbox. Users must build in a clean VCS tree and inspect the result afterward.
 
-**Status**: accepted (v1)
+**Status**: superseded in part by ADR-0004; direct writes remain
 
-**Consequences**: files can be clobbered with no rollback; prompt injection can write code; the sandbox claim must be removed or backed by real isolation.
+**Consequences**: files can be clobbered with no rollback; prompt injection can write code after approval; the sandbox claim is removed, and isolation remains deferred.
 
 **Considered options**: dry-run diff with confirmation; temporary-directory sandbox; automatic branch or stash before writing.

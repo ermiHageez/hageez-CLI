@@ -4,13 +4,17 @@
 
 **Blocked by:** 02 — Secure config storage.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Covers:** NEXT_STEPS Step 6, startup and version portion.
 
-- [ ] Each startup status is derived from a real check; no row is always shown as successful.
-- [ ] The config check performs no network call.
-- [ ] Memory and RAG say `off (not implemented)`.
-- [ ] The hardcoded `Context: 128k` claim is removed.
-- [ ] Startup, doctor, and `--version` all report the package version from one source.
-- [ ] Tests cover the status booleans and version source without requiring a network or a real key.
+- [x] Each startup status is derived from a real check; no row is always shown as successful.
+- [x] The config check performs no network call.
+- [x] Memory and RAG say `off (not implemented)`.
+- [x] The hardcoded `Context: 128k` claim is removed.
+- [x] Startup, doctor, and `--version` all report the package version from one source.
+- [x] Tests cover the status booleans and version source without requiring a network or a real key.
+
+## Comments
+
+- 2026-10-24: Implemented in Story 1. `npm run lint`, `npm test` (58 tests), and `npm run build` pass.

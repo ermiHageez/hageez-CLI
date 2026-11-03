@@ -2,6 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ProjectContext } from '../core';
 
+export * from './paths';
+
 const LANGUAGE_MAP: Record<string, string> = {
 '.ts': 'TypeScript', '.tsx': 'TypeScript',
 '.js': 'JavaScript', '.jsx': 'JavaScript',

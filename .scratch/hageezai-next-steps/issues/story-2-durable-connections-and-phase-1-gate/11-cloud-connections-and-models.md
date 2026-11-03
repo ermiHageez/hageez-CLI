@@ -4,13 +4,17 @@
 
 **Blocked by:** 10 — Connection schema expansion.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Covers:** NEXT_STEPS Step 7a, cloud connections.
 
-- [ ] `connect add` supports the four cloud provider types plus a custom OpenAI-compatible base URL, with masked key input or an environment-variable name.
-- [ ] `connect list`, `connect test`, and `connect remove` operate on named connections and never print keys.
-- [ ] A default connection and model can be selected, and model calls use that connection.
-- [ ] `models` lists the built-in cloud catalog for a connection and allows an override.
-- [ ] Doctor shows every connection, whether it is reachable, and how many agents use it.
-- [ ] Tests cover add/list/test/remove, custom base URL resolution, default resolution, and unreachable connections without network access.
+- [x] `connect add` supports the four cloud provider types plus a custom OpenAI-compatible base URL, with masked key input or an environment-variable name.
+- [x] `connect list`, `connect test`, and `connect remove` operate on named connections and never print keys.
+- [x] A default connection and model can be selected, and model calls use that connection.
+- [x] `models` lists the built-in cloud catalog for a connection and allows an override.
+- [x] Doctor shows every connection, whether it is reachable, and how many agents use it.
+- [x] Tests cover add/list/test/remove, custom base URL resolution, default resolution, and unreachable connections without network access.
+
+## Comments
+
+- 2026-10-25: Implemented named cloud/openai-compatible connections, registry-based default and agent resolution, connect add/list/show/test/use/remove, model catalogs, doctor reachability/agent usage, and tests. `npm run lint`, `npm test` (70 tests), and `npm run build` pass.

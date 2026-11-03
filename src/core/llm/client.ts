@@ -1,26 +1,34 @@
-import { HageezConfig, LLMMessage, LLMResponse, HageezError } from '../types';
+import { HageezConfig, LLMCallOptions, LLMMessage, LLMResponse, HageezError, ModelReference } from '../types';
 import { callOpenAI } from './openai';
 import { callAnthropic } from './anthropic';
 import { callGrok } from './grok';
 import { callGroq } from './groq';
+import { callOllama } from './ollama';
+import { resolveModelConfig } from './registry';
 
 export async function callLLM(
   config: HageezConfig,
-  messages: LLMMessage[]
+  messages: LLMMessage[],
+  options: LLMCallOptions = {},
+  reference?: ModelReference
 ): Promise<LLMResponse> {
-  switch (config.provider) {
+  const resolved = resolveModelConfig(config, reference);
+  switch (resolved.provider) {
     case 'openai':
-      return callOpenAI(config, messages);
+    case 'openai-compatible':
+      return callOpenAI(resolved, messages, options);
     case 'anthropic':
-      return callAnthropic(config, messages);
+      return callAnthropic(resolved, messages, options);
     case 'grok':
-      return callGrok(config, messages);
+      return callGrok(resolved, messages, options);
     case 'groq':
-      return callGroq(config, messages);
+      return callGroq(resolved, messages, options);
+    case 'ollama':
+      return callOllama(resolved, messages, options);
     default:
       throw new HageezError(
         'UNKNOWN_PROVIDER',
-        `Unknown LLM provider: ${String(config.provider)}`
+        `Unknown LLM provider: ${String(resolved.provider)}`
       );
   }
 }

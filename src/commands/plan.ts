@@ -4,25 +4,30 @@ import { loadConfig, callLLM, buildSystemPrompt } from '../core';
 import { theme, success, separator } from '../ui/theme';
 import { scanProject } from '../filesystem';
 
-interface PlanOptions {
+export interface PlanOptions {
   prd?: boolean;
   tickets?: boolean;
+  silent?: boolean;
 }
 
-export async function runPlan(task: string | undefined, opts: PlanOptions): Promise<void> {
+export async function runPlan(task: string | undefined, opts: PlanOptions): Promise<string | void> {
   let config;
   try { config = loadConfig(); } catch {
-    console.log(chalk.dim('\n  Run hageez init first.\n'));
+    if (!opts.silent) {
+      console.log(chalk.dim('\n  Run hageez init first.\n'));
+    }
     return;
   }
 
   const t = task ?? await promptTask();
   if (!t) return;
 
-  console.log('');
   const mode = opts.prd ? 'PRD' : opts.tickets ? 'Tickets' : 'Execution Plan';
-  console.log(theme.cyan(`  Creating ${mode} for: `) + chalk.white(`"${t}"`));
-  console.log('');
+  if (!opts.silent) {
+    console.log('');
+    console.log(theme.cyan(`  Creating ${mode} for: `) + chalk.white(`"${t}"`));
+    console.log('');
+  }
 
   try {
     const project = await scanProject(process.cwd());
@@ -37,15 +42,21 @@ export async function runPlan(task: string | undefined, opts: PlanOptions): Prom
     }
 
     const res = await callLLM(config, [sys, { role: 'user', content: prompt }]);
-    console.log(separator());
-    console.log('');
-    console.log(chalk.white(res.content));
-    console.log('');
-    console.log(success(`  ${mode} complete.`));
-    console.log(chalk.dim(`  Tokens: ${res.tokensUsed}`));
-    console.log('');
+    if (!opts.silent) {
+      console.log(separator());
+      console.log('');
+      console.log(chalk.white(res.content));
+      console.log('');
+      console.log(success(`  ${mode} complete.`));
+      console.log(chalk.dim(`  Tokens: ${res.tokensUsed}`));
+      console.log('');
+    }
+    return res.content;
   } catch (err) {
-    console.log(theme.red(`  Error: ${err instanceof Error ? err.message : String(err)}`));
+    if (!opts.silent) {
+      console.log(theme.red(`  Error: ${err instanceof Error ? err.message : String(err)}`));
+    }
+    throw err;
   }
 }
 

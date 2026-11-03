@@ -4,12 +4,14 @@
 
 **Blocked by:** 21 — Analyst agent.
 
-**Status:** ready-for-agent
+**Status:** resolved
+
+**Resolution:** Implemented and verified with `npm run lint`, `npm test` (109 passing), and `npm run build`.
 
 **Covers:** NEXT_STEPS Step 16a.
 
-- [ ] The Agent asks Socratic questions grounded in the analysis rather than accepting the first framing.
-- [ ] It writes a `brief` artifact describing the problem, users, outcomes, constraints, and non-goals.
-- [ ] The fake grill path is no longer reachable.
-- [ ] It runs through the orchestrator and writes artifacts only.
-- [ ] Tests cover question flow, brief structure, and the absence of the fake grill behaviour.
+- [x] The Agent asks Socratic questions grounded in the analysis rather than accepting the first framing.
+- [x] It writes a `brief` artifact describing the problem, users, outcomes, constraints, and non-goals.
+- [x] The fake grill path is no longer reachable.
+- [x] It runs through the orchestrator and writes artifacts only.
+- [x] Tests cover question flow, brief structure, and the absence of the fake grill behaviour.

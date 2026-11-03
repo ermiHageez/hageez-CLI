@@ -1,7 +1,9 @@
 import chalk from 'chalk';
 import * as os from 'os';
-import { theme, label, value, success, command, VERSION, separator } from './theme';
+import { theme, label, value, VERSION, separator } from './theme';
 import { ProjectContext, HageezConfig } from '../core';
+import { getStartupStatusItems } from './startup';
+import { listDecisions } from '../memory';
 
 export interface DashboardOptions {
   project?: ProjectContext;
@@ -9,17 +11,12 @@ export interface DashboardOptions {
   recentSessions?: Array<{ task: string; timeAgo: string }>;
 }
 
-function renderStatusIndicators(config?: HageezConfig): string {
-  const items = [
-    { label: 'Connected', ok: true },
-    { label: 'Memory Enabled', ok: config?.memoryEnabled ?? false },
-    { label: 'RAG Enabled', ok: config?.ragEnabled ?? false },
-    { label: 'Git Connected', ok: true },
-    { label: 'Project Loaded', ok: true },
-  ];
-  return items.map(i => {
-    const icon = i.ok ? chalk.hex('#39FF14')('✔') : chalk.dim('○');
-    return `  ${icon} ${i.label}`;
+function renderStatusIndicators(config?: HageezConfig, project?: ProjectContext): string {
+  const items = getStartupStatusItems({ config, project });
+  return items.map((item) => {
+    const icon = item.ok ? chalk.hex('#39FF14')('✔') : chalk.dim('○');
+    const detail = item.detail ? chalk.dim(` — ${item.detail}`) : '';
+    return `  ${icon} ${item.label}${detail}`;
   }).join('\n');
 }
 
@@ -60,14 +57,13 @@ function renderTips(): string {
 function renderFooter(project?: ProjectContext, config?: HageezConfig): string {
   const cwd = process.cwd().replace(os.homedir(), '~');
   const branch = project?.branch ?? 'main';
-  const model = config?.model ?? 'HageezAI-v1';
+  const model = config?.defaultModel?.model ?? 'HageezAI-v1';
   return [
     separator(),
     `  ${chalk.dim('Project:')} ${chalk.white(cwd)}`,
     `  ${chalk.dim('Branch:')}   ${chalk.green(branch)}`,
     `  ${chalk.dim('Model:')}    ${chalk.cyan(model)}`,
-    `  ${chalk.dim('Context:')}  ${chalk.cyan('128k')}`,
-    `  ${chalk.dim('Sandbox:')}  ${chalk.green('Enabled')}`,
+    `  ${chalk.dim('Writes:')}   ${chalk.yellow('direct (review changes with git)')}`,
   ].join('\n');
 }
 
@@ -93,7 +89,7 @@ export function printFullDashboard(opts: DashboardOptions = {}): void {
   console.log('');
 
   // Status indicators + Project context side by side
-  const leftCol = renderStatusIndicators(opts.config).split('\n');
+  const leftCol = renderStatusIndicators(opts.config, opts.project).split('\n');
   const rightCol = renderProjectContext(opts.project).split('\n');
   const maxRows = Math.max(leftCol.length, rightCol.length);
 
@@ -128,8 +124,9 @@ export function printProjectInfo(project: ProjectContext, config?: HageezConfig)
   console.log('');
   console.log(label('  Project : ') + value(project.name));
   console.log(label('  Branch  : ') + theme.green(project.branch ?? 'unknown'));
-  console.log(label('  Model   : ') + value(config?.model ?? 'not set'));
-  console.log(label('  Memory  : ') + (config?.memoryEnabled ? success('Enabled') : chalk.dim('Disabled')));
+  console.log(label('  Model   : ') + value(config?.defaultModel?.model ?? 'not set'));
+  const decisions = listDecisions(process.cwd()).length;
+  console.log(label('  Memory  : ') + chalk.dim(decisions > 0 ? `${decisions} Decision(s)` : 'ready (no Decisions yet)'));
   console.log('');
 }
 

@@ -3,21 +3,20 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
 import { loadConfig } from '../core';
-import { theme, success, label, separator } from '../ui/theme';
+import { theme, label, separator } from '../ui/theme';
 import { renderSteps, renderSummary, ProgressStep } from '../ui/progress';
-import { scanProject } from '../filesystem';
-import { createPlanner } from '../planner';
-import { createBuilder, applyBuilderResult } from '../builder';
-import { createReviewer } from '../reviewer';
-import { createDebugger } from '../debugger';
 import { logSession } from '../memory';
-import { callLLM, buildSystemPrompt } from '../core';
+import { printAgentTable } from '../agents/assignment';
+import { runFinalPipeline } from '../pipeline';
+import { PipelineNodeState } from '../orchestrator';
 import { parseFileReferences, buildFileContext, stripFileRefs } from '../ui/filerefs';
+import { isSmallTalk } from '../ui/repl';
 
-interface BuildOptions {
-  tdd?: boolean;
+export interface BuildOptions {
   viaOpencode?: boolean;
-  prd?: boolean;
+  yes?: boolean;
+  dryRun?: boolean;
+  silent?: boolean;
 }
 
 export function ensureAiLearningDir(): void {
@@ -54,14 +53,13 @@ async function promptTask(): Promise<string> {
   });
 }
 
-const BUILD_STEPS: Array<{ label: string }> = [
-  { label: 'Understanding user request' },
+export const BUILD_STEPS: Array<{ label: string }> = [
   { label: 'Scanning project & collecting context' },
+  { label: 'Understanding request' },
   { label: 'Creating execution plan' },
   { label: 'Generating & modifying code' },
   { label: 'Applying file changes' },
   { label: 'Reviewing & refining' },
-  { label: 'Committing & documenting' },
 ];
 
 export async function runBuild(task: string | undefined, opts: BuildOptions): Promise<void> {
@@ -76,6 +74,11 @@ export async function runBuild(task: string | undefined, opts: BuildOptions): Pr
   }
 
   if (!task) {
+    if (process.stdin.isTTY !== true) {
+      console.log(theme.red('  Error: a task is required in a non-interactive terminal.'));
+      process.exitCode = 1;
+      return;
+    }
     console.log('');
     console.log(label('  Project : ') + theme.cyan(path.basename(process.cwd())));
     task = await promptTask();
@@ -85,45 +88,62 @@ export async function runBuild(task: string | undefined, opts: BuildOptions): Pr
     }
   }
 
-  ensureAiLearningDir();
-
-  // Parse @file references
-  const projectRoot = process.cwd();
-  const fileRefs = parseFileReferences(task, projectRoot);
-  const fileContext = buildFileContext(fileRefs);
-  const cleanTask = stripFileRefs(task);
-
-  if (fileRefs.length > 0) {
-    console.log('');
-    console.log(theme.cyan('  Referenced files:'));
-    for (const ref of fileRefs) {
-      const status = ref.resolved ? chalk.green('✓') : chalk.red('✗');
-      console.log(`  ${status} ${ref.pattern}`);
-    }
-  }
-
-  console.log('');
-  console.log(theme.cyan(`  Building: `) + chalk.white(`"${cleanTask || task}"`));
-  if (opts.tdd) console.log(chalk.dim('  Mode: TDD (test-first)'));
-  if (opts.viaOpencode) {
-    console.log(chalk.dim('  Delegating to opencode...'));
-    const { runViaOpencode } = await import('../tools');
-    await runViaOpencode(task);
+  if (isSmallTalk(task)) {
+    console.log(theme.yellow('  Notice: Build requires a clear software engineering task.'));
+    console.log(chalk.dim('  For conversational questions and small talk, use: ') + theme.cyan('hageez chat'));
+    const { runChat } = await import('./chat');
+    await runChat();
     return;
   }
+
+  if (!opts.silent) {
+    printAgentTable(config);
+  }
+
+  if (!opts.yes && !opts.dryRun && process.stdin.isTTY !== true) {
+    console.log(theme.red('  Error: refusing to write in a non-interactive terminal without --yes.'));
+    console.log(chalk.dim('  Use --yes to approve all changes or --dry-run to preview only.'));
+    process.exitCode = 1;
+    return;
+  }
+
+  const projectRoot = process.cwd();
+  const cleanTask = stripFileRefs(task);
+
+  if (!opts.silent) {
+    console.log('');
+    console.log(theme.cyan(`  Building: `) + chalk.white(`"${cleanTask || task}"`));
+  }
+
+  if (opts.viaOpencode) {
+    if (opts.dryRun) {
+      console.log(theme.red('  Error: --dry-run cannot be combined with --via-opencode.'));
+      process.exitCode = 1;
+      return;
+    }
+    console.log(chalk.dim('  Delegating to opencode...'));
+    try {
+      const { runViaOpencode } = await import('../tools');
+      await runViaOpencode(task);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.log(theme.red(`  Error: ${message}`));
+      process.exitCode = 1;
+    }
+    return;
+  }
+
   console.log('');
 
+  const startTime = Date.now();
+  let tokensUsed = 0;
   const steps: ProgressStep[] = BUILD_STEPS.map((s, i) => ({
     id: i,
     label: s.label,
     status: 'pending',
   }));
 
-  const startTime = Date.now();
-  let tokensUsed = 0;
-
   const renderProgress = (): void => {
-    process.stdout.write('\u001B[2J\u001B[0f');
     console.log('');
     console.log(theme.cyan(`  hageez > `) + chalk.white(cleanTask || task));
     console.log('');
@@ -131,117 +151,117 @@ export async function runBuild(task: string | undefined, opts: BuildOptions): Pr
     console.log('');
   };
 
-  const markRunning = (i: number): void => {
-    steps[i].status = 'running';
-    renderProgress();
+  const saveSession = async (
+    outcome: 'success' | 'partial' | 'failed',
+    errorMessage?: string
+  ): Promise<void> => {
+    if (opts.dryRun) return;
+    try {
+      await logSession({
+        command: 'build',
+        task: cleanTask || task,
+        steps: steps.map((step) => ({ ...step })),
+        tokensUsed,
+        durationMs: Date.now() - startTime,
+        outcome,
+        error: errorMessage,
+        projectPath: projectRoot,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.log(chalk.yellow(`  Warning: could not write the session log: ${message}`));
+    }
   };
-
-  const markDone = (i: number, ms: number): void => {
-    steps[i].status = 'done';
-    steps[i].durationMs = ms;
-    renderProgress();
-  };
-
-  const delay = (ms: number): Promise<void> =>
-    new Promise(r => setTimeout(r, ms));
 
   try {
-    const project = await scanProject(projectRoot);
-
-    markRunning(0);
-    await delay(600);
-    const planner = createPlanner(config);
-    const intent = await planner.analyzeIntent(cleanTask || task, project);
-    tokensUsed += intent.tokensUsed;
-    markDone(0, Date.now() - startTime);
-
-    markRunning(1);
-    await delay(400);
-    markDone(1, 400);
-
-    markRunning(2);
-    await delay(500);
-    const plan = await planner.createPlan(cleanTask || task, project, intent.content);
-    tokensUsed += plan.tokensUsed;
-    markDone(2, 500);
-
-    markRunning(3);
-    await delay(800);
-    const builder = createBuilder(config);
-    const buildResult = await builder.generate(cleanTask || task, project, plan.content, fileContext);
-    tokensUsed += buildResult.tokensUsed;
-    markDone(3, 800);
-
-    // Apply file changes
-    markRunning(4);
-    const applyStart = Date.now();
-    const { written, errors } = applyBuilderResult(buildResult, projectRoot);
-    markDone(4, Date.now() - applyStart);
-
-    // Show file changes
-    if (written.length > 0) {
-      console.log('');
-      console.log(theme.cyan('  File Changes:'));
-      for (const w of written) {
-        const [action, ...pathParts] = w.split(' ');
-        const filePath = pathParts.join(' ');
-        const color = action === 'CREATE' ? chalk.green : action === 'DELETE' ? chalk.red : chalk.yellow;
-        console.log(`  ${color(action)}  ${chalk.white(filePath)}`);
-      }
-    } else if (buildResult.files.length === 0) {
-      console.log('');
-      console.log(chalk.yellow('  No file changes detected. The AI provided a response but did not output files in the expected format.'));
-      console.log(chalk.dim('  Tip: Try being more specific, e.g., "update theme.ts to use blue colors"'));
+    if (!opts.silent) {
+      renderProgress();
     }
-
-    if (errors.length > 0) {
+    const fileRefs = parseFileReferences(task, projectRoot);
+    const fileContext = buildFileContext(fileRefs);
+    if (!opts.silent && fileRefs.length > 0) {
       console.log('');
-      console.log(theme.red('  Errors:'));
-      for (const e of errors) {
-        console.log(chalk.red(`  ✗ ${e}`));
+      console.log(theme.cyan('  Referenced files:'));
+      for (const ref of fileRefs) {
+        const status = ref.resolved ? chalk.green('✓') : chalk.red('✗');
+        console.log(`  ${status} ${ref.pattern}`);
       }
     }
 
-    markRunning(5);
-    await delay(500);
-    const reviewer = createReviewer(config);
-    const review = await reviewer.review(buildResult.content, project);
-    tokensUsed += review.tokensUsed;
-    markDone(5, 500);
-
-    markRunning(6);
-    await delay(300);
-    markDone(6, 300);
-
-    const totalMs = Date.now() - startTime;
-    console.log(renderSummary(tokensUsed, totalMs, 'success'));
-    console.log('');
-
-    await logSession({
-      command: 'build',
+    const result = await runFinalPipeline({
+      config,
       task: cleanTask || task,
-      steps: steps.map(s => ({ ...s, status: s.status as 'done' })),
-      tokensUsed,
-      durationMs: totalMs,
-      outcome: errors.length > 0 ? 'partial' : 'success',
       projectPath: projectRoot,
+      dryRun: opts.dryRun,
+      yes: opts.yes,
+      silent: opts.silent,
+      fileContext,
+      onProgress: (progress) => {
+        if (!opts.silent) {
+          if (progress.type === 'start') {
+            console.log(chalk.cyan(`  → ${progress.agent}`));
+          } else if (progress.type === 'success') {
+            console.log(chalk.green(`  ✓ ${progress.agent}`));
+          } else if (progress.type === 'failed') {
+            console.log(chalk.red(`  ✗ ${progress.agent}: ${progress.message ?? 'failed'}`));
+          } else {
+            console.log(chalk.yellow(`  ○ ${progress.agent}: ${progress.message ?? 'skipped'}`));
+          }
+        }
+        const next = steps.find((step) => step.status === 'pending');
+        if (next) next.status = 'done';
+      },
     });
+    const nodes = result.nodes;
+    tokensUsed = nodes.reduce((sum, node) => sum + (node.result?.tokens ?? 0), 0);
+    for (const step of steps) step.status = 'done';
 
-    if (review.content) {
+    const failed = nodes.filter((node) => node.status === 'failed');
+    const skipped = nodes.filter((node) => node.status === 'skipped');
+    const buildNode = nodes.find((node) => node.node.agent === 'build');
+    const reviewNode = nodes.find((node) => node.node.agent === 'code-review');
+    const status: 'success' | 'partial' =
+      failed.length > 0 || skipped.some((node) => !node.node.optional) ? 'partial' : 'success';
+
+    if (opts.dryRun) {
+      if (!opts.silent) {
+        console.log('');
+        console.log(theme.cyan('  Dry run complete — no files written.'));
+      }
+    } else {
+      ensureAiLearningDir();
+      if (!opts.silent) {
+        console.log(renderSummary(tokensUsed, Date.now() - startTime, status));
+      }
+      await saveSession(status, failed.map((node) => node.error ?? node.node.agent).join('; ') || undefined);
+    }
+
+    if (buildNode?.result?.status === 'failed') {
+      if (!opts.silent) {
+        console.log(theme.red(`  Build failed: ${buildNode.result.error ?? 'unknown error'}`));
+      }
+      process.exitCode = 1;
+    }
+    if (reviewNode?.result?.output && !opts.silent) {
       console.log(separator());
       console.log('');
       console.log(theme.cyan('  Review Notes:'));
-      console.log(chalk.dim(review.content.slice(0, 800)));
+      console.log(chalk.dim(reviewNode.result.output.slice(0, 1200)));
       console.log('');
     }
-
+    if (result.manifest && !opts.silent) {
+      console.log(chalk.dim(`  Artifacts: ai-learning/runs/${result.manifest.runId}/`));
+    }
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
-    const failIdx = steps.findIndex(s => s.status === 'running');
-    if (failIdx >= 0) steps[failIdx].status = 'error';
-    renderProgress();
-    console.log(renderSummary(tokensUsed, Date.now() - startTime, 'error'));
-    console.log('');
-    console.log(chalk.dim(`  Error: ${errMsg}`));
+    for (const step of steps) if (step.status === 'running') step.status = 'error';
+    if (!opts.silent) {
+      renderProgress();
+      console.log(renderSummary(tokensUsed, Date.now() - startTime, 'error'));
+      console.log('');
+      console.log(chalk.dim(`  Error: ${errMsg}`));
+    }
+    await saveSession('failed', errMsg);
+    process.exitCode = 1;
   }
 }

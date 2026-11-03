@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { getVersion } from '../core/version';
 
 export const theme = {
   primary: chalk.hex('#39FF14'),
@@ -36,4 +37,4 @@ export const badge = (text: string, color: 'green' | 'cyan' | 'red' | 'yellow' |
   return (colors[color] || colors.green)(` ${text} `);
 };
 
-export const VERSION = '1.0.0';
+export const VERSION = getVersion();

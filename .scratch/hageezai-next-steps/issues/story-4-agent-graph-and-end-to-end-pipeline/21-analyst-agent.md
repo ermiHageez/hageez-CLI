@@ -4,12 +4,14 @@
 
 **Blocked by:** 18 — Orchestrator.
 
-**Status:** ready-for-agent
+**Status:** resolved
+
+**Resolution:** Implemented and verified with `npm run lint`, `npm test` (109 passing), and `npm run build`.
 
 **Covers:** NEXT_STEPS Step 15a.
 
-- [ ] The `analyst` Agent wraps the existing scanner and intent step without duplicating their logic.
-- [ ] It runs through the orchestrator and writes an `analysis` artifact containing requirements and MVP scope.
-- [ ] `hageez build` continues to behave as before until later Agents are ported.
-- [ ] The Agent has a system prompt, declared inputs and outputs, and one test.
-- [ ] Tests cover a successful analysis run and the artifact contract.
+- [x] The `analyst` Agent wraps the existing scanner and intent step without duplicating their logic.
+- [x] It runs through the orchestrator and writes an `analysis` artifact containing requirements and MVP scope.
+- [x] `hageez build` continues to behave as before until later Agents are ported.
+- [x] The Agent has a system prompt, declared inputs and outputs, and one test.
+- [x] Tests cover a successful analysis run and the artifact contract.

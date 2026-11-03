@@ -2,13 +2,14 @@ import chalk from 'chalk';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { configExists, loadConfig } from '../core';
-import { theme, success, label, separator } from '../ui/theme';
+import { configExists, connectionConcurrency, loadConfig, probeConnection, resolveApiKey, resolveBaseUrl } from '../core';
+import { theme, success, label, separator, VERSION } from '../ui/theme';
 import { scanProject } from '../filesystem';
+import { listDecisions } from '../memory';
 
 export async function runDoctor(): Promise<void> {
   console.log('');
-  console.log(chalk.bold.hex('#39FF14')('  System Health Check'));
+  console.log(chalk.bold.hex('#39FF14')(`  System Health Check — v${VERSION}`));
   console.log(separator());
   console.log('');
 
@@ -26,10 +27,40 @@ export async function runDoctor(): Promise<void> {
     try {
       config = loadConfig();
       checks.push({
-        label: `LLM Provider (${config.provider})`,
+        label: `Default model (${config.defaultModel.connection})`,
         status: 'ok',
-        detail: config.model,
+        detail: config.defaultModel.model,
       });
+      const connections = config.connections ?? {};
+      for (const [name, connection] of Object.entries(connections)) {
+        const key = connection.type === 'ollama'
+          ? 'local'
+          : resolveApiKey(config, name) ? 'key set' : 'missing key';
+        checks.push({
+          label: `Connection ${name} (${connection.type})`,
+          status: key === 'missing key' ? 'warn' : 'ok',
+          detail: `${resolveBaseUrl(config, name) ?? 'no base URL'} · ${key} · ${connectionConcurrency(config, name)} slot(s)`,
+        });
+      }
+      const assigned = Object.entries(config.agents ?? {});
+      if (assigned.length > 0) {
+        checks.push({
+          label: 'Agent assignments',
+          status: 'ok',
+          detail: assigned.map(([agent, ref]) => `${agent}=${ref.connection}/${ref.model}`).join(', '),
+        });
+      }
+      for (const name of Object.keys(connections)) {
+        const probe = await probeConnection(config, name, { timeoutMs: 3000 });
+        const users = assigned.filter(([, ref]) => ref.connection === name).map(([agent]) => agent);
+        checks.push({
+          label: `Connection reachability (${name})`,
+          status: probe.ok ? 'ok' : 'fail',
+          detail: probe.ok
+            ? `${probe.models.length} model(s)${users.length ? ` · agents: ${users.join(', ')}` : ''}`
+            : `${probe.error ?? 'unreachable'}${users.length ? ` · agents: ${users.join(', ')}` : ''}`,
+        });
+      }
     } catch {
       checks.push({ label: 'LLM Provider', status: 'fail', detail: 'Failed to parse config' });
     }
@@ -56,6 +87,19 @@ export async function runDoctor(): Promise<void> {
     detail: fs.existsSync(cursorDir) ? undefined : 'Run hageez init --cursor to generate',
   });
 
+  const decisions = listDecisions(process.cwd()).length;
+  checks.push({
+    label: 'Memory',
+    status: decisions > 0 ? 'ok' : 'warn',
+    detail: decisions > 0 ? `${decisions} Decision(s)` : 'ready; no Decisions yet',
+  });
+
+  checks.push({
+    label: 'RAG',
+    status: 'warn',
+    detail: 'off (not implemented)',
+  });
+
   const gitDir = path.join(process.cwd(), '.git');
   checks.push({
     label: 'Git repository',
@@ -64,11 +108,13 @@ export async function runDoctor(): Promise<void> {
   });
 
   const nodeVersion = process.version;
-  const majorVersion = parseInt(nodeVersion.replace('v', '').split('.')[0] ?? '0');
+  const [majorVersion, minorVersion] = nodeVersion.replace('v', '').split('.').map(Number);
+  const nodeSupported =
+    (majorVersion ?? 0) > 22 || ((majorVersion ?? 0) === 22 && (minorVersion ?? 0) >= 12);
   checks.push({
     label: `Node.js ${nodeVersion}`,
-    status: majorVersion >= 18 ? 'ok' : 'fail',
-    detail: majorVersion >= 18 ? undefined : 'HageezAI requires Node.js >= 18',
+    status: nodeSupported ? 'ok' : 'fail',
+    detail: nodeSupported ? undefined : 'HageezAI requires Node.js >= 22.12.0',
   });
 
   for (const check of checks) {

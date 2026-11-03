@@ -4,13 +4,17 @@
 
 **Blocked by:** 06 — Diff approval, backups, and dry-run.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Covers:** NEXT_STEPS Step 6, pipeline and Session Log portion.
 
-- [ ] The visible pipeline is exactly scan/context, understand, plan, generate, apply, and review; no committing step remains.
-- [ ] Build no longer accepts the fake TDD/PRD flags; Plan still accepts its PRD flag.
-- [ ] No artificial delay remains, and per-step durations are measured from real work.
-- [ ] A thrown Build records a failed Session Log with actual step statuses, `outcome: failed`, and the error.
-- [ ] A Session Log write failure does not hide the original Build error.
-- [ ] A write failure records `partial` and renders a warning summary, not a success.
+- [x] The visible pipeline is exactly scan/context, understand, plan, generate, apply, and review; no committing step remains.
+- [x] Build no longer accepts the fake TDD/PRD flags; Plan still accepts its PRD flag.
+- [x] No artificial delay remains, and per-step durations are measured from real work.
+- [x] A thrown Build records a failed Session Log with actual step statuses, `outcome: failed`, and the error.
+- [x] A Session Log write failure does not hide the original Build error.
+- [x] A write failure records `partial` and renders a warning summary, not a success.
+
+## Comments
+
+- 2026-10-24: Implemented in Story 1. `npm run lint`, `npm test` (58 tests), and `npm run build` pass.

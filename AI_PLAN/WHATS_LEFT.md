@@ -1,3 +1,5 @@
+> **Historical audit snapshot (2026-10-24).** It is superseded by `README.md` and `NEXT_STEPS.md`; tickets `01–31` are implemented.
+
 # HageezAI — What Is Left
 
 Status snapshot of the **as-built** `hageezai-cli` v1.0.0 (TypeScript/CommonJS, Node >=18 declared).
