@@ -2,7 +2,7 @@
 
 Execution plan based on `AUDIT_REPORT.md`, with the new **Step 7a** (local Ollama and named connections) and **Step 10a** (agent-to-model assignment) inserted after Steps 7 and 10. Step numbers are unchanged.
 
-**Status:** planning complete; no implementation started.
+**Status:** All four stories complete (tickets 01–31); the multi-agent pipeline is implemented and tested.
 
 ## Rules for opencode
 
@@ -238,7 +238,7 @@ command -v opencode
   - Git repo detected via `.git`.
   - `ai-learning/` present.
   - Project loaded via a scan passed from `src/index.ts`.
-  - Memory and RAG: `off (not implemented)`.
+  - Memory: project Decisions and candidate skills; RAG: `off (not implemented)`.
   - Animate/check based on the real boolean, never always `✔`.
 - Change `SessionLog`:
   - `outcome: 'success' | 'partial' | 'failed'`; retain `'error'` for old logs.
@@ -607,26 +607,26 @@ analyst -> product-brief
 
 ## Progress checklist
 
-- [ ] 0 git baseline
-- [ ] 1 config security
-- [ ] 2 path containment + sandbox claim removed
-- [ ] 3 `--via-opencode` fixed
-- [ ] 4 all `@file`s + extensions
-- [ ] 5 diff and approval gate
-- [ ] 6 truthful pipeline and UI
-- [ ] 7 provider hardening
-- [ ] 7a connections + Ollama + config v2
-- [ ] 8 tests + CI
-- [ ] 9 docs and Node floor
-- [ ] 10 agent runtime
-- [ ] 10a assign models to the ten agents
-- [ ] 11 artifact store
-- [ ] 12 orchestrator
-- [ ] 13 memory recall
-- [ ] 14 skills loader
-- [ ] 15a-d port existing steps into agents
-- [ ] 16a-f new agents
-- [ ] 17 final parallel pipeline
+- [x] 0 git baseline
+- [x] 1 config security
+- [x] 2 path containment + sandbox claim removed
+- [x] 3 `--via-opencode` fixed
+- [x] 4 all `@file`s + extensions
+- [x] 5 diff and approval gate
+- [x] 6 truthful pipeline and UI
+- [x] 7 provider hardening
+- [x] 7a connections + Ollama + config v2
+- [x] 8 tests + CI
+- [x] 9 docs and Node floor
+- [x] 10 agent runtime
+- [x] 10a assign models to the ten agents
+- [x] 11 artifact store
+- [x] 12 orchestrator
+- [x] 13 memory recall
+- [x] 14 skills loader
+- [x] 15a-d port existing steps into agents
+- [x] 16a-f new agents
+- [x] 17 final parallel pipeline
 
 ## Handoff protocol
 

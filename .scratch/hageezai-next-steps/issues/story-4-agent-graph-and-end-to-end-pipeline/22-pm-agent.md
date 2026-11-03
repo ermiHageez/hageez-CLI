@@ -4,12 +4,14 @@
 
 **Blocked by:** 21 — Analyst agent.
 
-**Status:** ready-for-agent
+**Status:** resolved
+
+**Resolution:** Implemented and verified with `npm run lint`, `npm test` (109 passing), and `npm run build`.
 
 **Covers:** NEXT_STEPS Step 15b.
 
-- [ ] The `pm` Agent wraps the existing planner rather than reimplementing planning.
-- [ ] It consumes the analyst artifact and writes a `plan` artifact with tasks and dependencies.
-- [ ] It runs through the orchestrator, writes artifacts only, and never writes project files.
-- [ ] The Agent has a system prompt, declared inputs and outputs, and one test.
-- [ ] Tests cover a plan produced from upstream analysis and the artifact contract.
+- [x] The `pm` Agent wraps the existing planner rather than reimplementing planning.
+- [x] It consumes the analyst artifact and writes a `plan` artifact with tasks and dependencies.
+- [x] It runs through the orchestrator, writes artifacts only, and never writes project files.
+- [x] The Agent has a system prompt, declared inputs and outputs, and one test.
+- [x] Tests cover a plan produced from upstream analysis and the artifact contract.

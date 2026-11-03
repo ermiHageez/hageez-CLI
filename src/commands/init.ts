@@ -35,23 +35,24 @@ export async function runInit(opts: InitOptions = {}): Promise<void> {
       prefix: theme.cyan('?'),
     },
     {
-      type: 'input',
+      type: 'password',
       name: 'apiKey',
       message: 'Enter your API key:',
+      mask: '*',
       prefix: theme.cyan('?'),
       validate: (v: string) => v.length > 0 ? true : 'API key cannot be empty',
     },
     {
       type: 'confirm',
       name: 'memoryEnabled',
-      message: 'Enable long-term memory? (stores decisions, conventions)',
+      message: 'Reserve a long-term memory setting? (not implemented yet)',
       default: true,
       prefix: theme.cyan('?'),
     },
     {
       type: 'confirm',
       name: 'ragEnabled',
-      message: 'Enable RAG? (vector search over your codebase)',
+      message: 'Reserve a RAG setting? (not implemented yet)',
       default: true,
       prefix: theme.cyan('?'),
     },
@@ -101,10 +102,10 @@ export async function runInit(opts: InitOptions = {}): Promise<void> {
   console.log('');
   console.log(success('  HageezAI initialized successfully!'));
   console.log('');
-  console.log(label('  Provider : ') + theme.cyan(config.provider));
-  console.log(label('  Model    : ') + theme.cyan(config.model));
-  console.log(label('  Memory   : ') + (config.memoryEnabled ? success('Enabled') : chalk.dim('Disabled')));
-  console.log(label('  RAG      : ') + (config.ragEnabled ? success('Enabled') : chalk.dim('Disabled')));
+  console.log(label('  Provider : ') + theme.cyan(config.defaultModel.connection));
+  console.log(label('  Model    : ') + theme.cyan(config.defaultModel.model));
+  console.log(label('  Memory   : ') + chalk.dim('off (not implemented)'));
+  console.log(label('  RAG      : ') + chalk.dim('off (not implemented)'));
   console.log('');
   console.log(chalk.dim('  Run ') + theme.primary('hageez build "your task"') + chalk.dim(' to get started!'));
   console.log('');

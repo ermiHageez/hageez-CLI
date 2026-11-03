@@ -1,4 +1,4 @@
-import { HageezConfig, ProjectContext, LLMResponse } from '../core';
+import { HageezConfig, ProjectContext, LLMResponse, LLMMessage } from '../core';
 import { callLLM, buildSystemPrompt } from '../core';
 
 export interface PlannerResult {
@@ -11,7 +11,9 @@ analyzeIntent: (task: string, project: ProjectContext) => Promise<PlannerResult>
 createPlan: (task: string, project: ProjectContext, intent: string) => Promise<PlannerResult>;
 }
 
-export function createPlanner(config: HageezConfig): Planner {
+export type PlannerModelCall = (config: HageezConfig, messages: LLMMessage[]) => Promise<LLMResponse>;
+
+export function createPlanner(config: HageezConfig, call: PlannerModelCall = callLLM): Planner {
 const sys = buildSystemPrompt(
 'You are an expert AI planner for software engineering tasks.',
 ''
@@ -19,7 +21,7 @@ const sys = buildSystemPrompt(
 
 return {
 async analyzeIntent(task: string, project: ProjectContext): Promise<PlannerResult> {
-const res = await callLLM(config, [
+const res = await call(config, [
 sys,
 {
 role: 'user',
@@ -30,7 +32,7 @@ return { content: res.content, tokensUsed: res.tokensUsed };
 },
 
 async createPlan(task: string, project: ProjectContext, intent: string): Promise<PlannerResult> {
-const res = await callLLM(config, [
+const res = await call(config, [
 sys,
 {
 role: 'user',

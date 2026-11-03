@@ -4,12 +4,16 @@
 
 **Blocked by:** 01 — Test harness and CI.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Covers:** NEXT_STEPS Step 3.
 
-- [ ] Opencode receives the Task as one argv element, never through a shell string.
-- [ ] A missing executable raises `OPENCODE_NOT_FOUND`; a non-zero run raises `OPENCODE_FAILED`.
-- [ ] Build prints the error cleanly, sets a failing exit code, and emits no stack trace.
-- [ ] Project validation uses argument-array execution as well.
-- [ ] Tests prove a Task containing `; echo hacked` remains a single argument.
+- [x] Opencode receives the Task as one argv element, never through a shell string.
+- [x] A missing executable raises `OPENCODE_NOT_FOUND`; a non-zero run raises `OPENCODE_FAILED`.
+- [x] Build prints the error cleanly, sets a failing exit code, and emits no stack trace.
+- [x] Project validation uses argument-array execution as well.
+- [x] Tests prove a Task containing `; echo hacked` remains a single argument.
+
+## Comments
+
+- 2026-10-24: Implemented in Story 1. `npm run lint`, `npm test` (58 tests), and `npm run build` pass.

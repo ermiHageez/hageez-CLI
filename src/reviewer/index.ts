@@ -1,4 +1,4 @@
-import { HageezConfig, ProjectContext } from '../core';
+import { HageezConfig, ProjectContext, LLMMessage, LLMResponse } from '../core';
 import { callLLM, buildSystemPrompt } from '../core';
 
 export interface ReviewerResult {
@@ -11,7 +11,9 @@ export interface Reviewer {
 review: (code: string, project: ProjectContext) => Promise<ReviewerResult>;
 }
 
-export function createReviewer(config: HageezConfig): Reviewer {
+export type ReviewerModelCall = (config: HageezConfig, messages: LLMMessage[]) => Promise<LLMResponse>;
+
+export function createReviewer(config: HageezConfig, call: ReviewerModelCall = callLLM): Reviewer {
 const sys = buildSystemPrompt(
 'You are an expert code reviewer. Be concise and actionable.',
 ''
@@ -19,7 +21,7 @@ const sys = buildSystemPrompt(
 
 return {
 async review(code: string, project: ProjectContext): Promise<ReviewerResult> {
-const res = await callLLM(config, [
+const res = await call(config, [
 sys,
 {
 role: 'user',

@@ -75,38 +75,92 @@ if (diffHours < 24) return `${diffHours}h ago`;
 return `${Math.floor(diffHours / 24)}d ago`;
 }
 
-export async function rememberDecision(
-key: string,
-value: string,
-projectPath?: string
-): Promise<void> {
-const dir = getMemoryDir(projectPath);
-if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
-const file = path.join(dir, 'project_memory.json');
-let memory: Record<string, MemoryEntry> = {};
-if (fs.existsSync(file)) {
-try { memory = JSON.parse(fs.readFileSync(file, 'utf-8')) as Record<string, MemoryEntry>; } catch { }
+export function readSessionLogs(projectPath?: string): SessionLog[] {
+  const dir = getSessionDir(projectPath);
+  if (!fs.existsSync(dir)) return [];
+  const sessions: SessionLog[] = [];
+  for (const file of fs.readdirSync(dir).filter((name) => name.endsWith('.json')).sort()) {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf-8')) as SessionLog[];
+      sessions.push(...parsed);
+    } catch {
+      // Skip unreadable session logs.
+    }
+  }
+  return sessions;
 }
 
-memory[key] = {
-id: Math.random().toString(36).slice(2),
-projectPath: projectPath ?? process.cwd(),
-type: 'decision',
-key,
-value,
-createdAt: memory[key]?.createdAt ?? new Date().toISOString(),
-updatedAt: new Date().toISOString(),
-};
-fs.writeFileSync(file, JSON.stringify(memory, null, 2), 'utf-8');
+export function getMemoryFile(projectPath?: string): string {
+  return path.join(getMemoryDir(projectPath), 'project_memory.json');
+}
+
+function readMemory(projectPath?: string): Record<string, MemoryEntry> {
+  const file = getMemoryFile(projectPath);
+  if (!fs.existsSync(file)) return {};
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf-8')) as Record<string, MemoryEntry>;
+  } catch {
+    return {};
+  }
+}
+
+export async function rememberDecision(
+  key: string,
+  value: string,
+  projectPath?: string
+): Promise<void> {
+  const dir = getMemoryDir(projectPath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const memory = readMemory(projectPath);
+  const now = new Date().toISOString();
+  memory[key] = {
+    id: memory[key]?.id ?? Math.random().toString(36).slice(2),
+    projectPath: projectPath ?? process.cwd(),
+    type: 'decision',
+    key,
+    value,
+    createdAt: memory[key]?.createdAt ?? now,
+    updatedAt: now,
+  };
+  fs.writeFileSync(getMemoryFile(projectPath), JSON.stringify(memory, null, 2), 'utf-8');
 }
 
 export async function recallDecision(key: string, projectPath?: string): Promise<string | null> {
-const dir = getMemoryDir(projectPath);
-const file = path.join(dir, 'project_memory.json');
-if (!fs.existsSync(file)) return null;
-try {
-const memory = JSON.parse(fs.readFileSync(file, 'utf-8')) as Record<string, MemoryEntry>;
-return memory[key]?.value ?? null;
-} catch { return null; }
+  return readMemory(projectPath)[key]?.value ?? null;
+}
+
+export function listDecisions(projectPath?: string): MemoryEntry[] {
+  const root = path.resolve(projectPath ?? process.cwd());
+  return Object.values(readMemory(projectPath))
+    .filter((entry) => entry.type === 'decision')
+    .filter((entry) => path.resolve(entry.projectPath) === root)
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+export function recallDecisions(projectPath?: string, keyword?: string): MemoryEntry[] {
+  const decisions = listDecisions(projectPath);
+  const needle = keyword?.trim().toLowerCase();
+  if (!needle) return decisions;
+  return decisions.filter(
+    (entry) =>
+      entry.key.toLowerCase().includes(needle) ||
+      entry.value.toLowerCase().includes(needle)
+  );
+}
+
+export async function removeDecision(key: string, projectPath?: string): Promise<boolean> {
+  const memory = readMemory(projectPath);
+  if (!memory[key]) return false;
+  delete memory[key];
+  fs.writeFileSync(getMemoryFile(projectPath), JSON.stringify(memory, null, 2), 'utf-8');
+  return true;
+}
+
+export function buildMemoryContext(projectPath?: string, keyword?: string): string {
+  const decisions = recallDecisions(projectPath, keyword);
+  if (decisions.length === 0) return '';
+  return decisions
+    .map((entry) => `- ${entry.key}: ${entry.value}`)
+    .join('\n');
 }

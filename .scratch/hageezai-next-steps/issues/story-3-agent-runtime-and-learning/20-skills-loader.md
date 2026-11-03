@@ -4,13 +4,15 @@
 
 **Blocked by:** 15 — Agent runtime; 19 — Memory recall.
 
-**Status:** ready-for-agent
+**Status:** resolved
+
+**Resolution:** Implemented and verified with `npm run lint`, `npm test` (109 passing), and `npm run build`.
 
 **Covers:** NEXT_STEPS Step 14.
 
-- [ ] A Skill is a markdown file with frontmatter for name, description, and applicable Agents, discoverable from both the project and the user's global area.
-- [ ] Matching Skills are passed into the system prompt for the Agent they apply to.
-- [ ] Disabled Skills are not loaded.
-- [ ] `hageez skills list`, `add`, `enable`, and `disable` work against the correct scope.
-- [ ] Invalid or non-matching Skills do not break a run.
-- [ ] Tests prove a Skill's content appears in the prompt of an applicable Agent and not in an unrelated Agent.
+- [x] A Skill is a markdown file with frontmatter for name, description, and applicable Agents, discoverable from both the project and the user's global area.
+- [x] Matching Skills are passed into the system prompt for the Agent they apply to.
+- [x] Disabled Skills are not loaded.
+- [x] `hageez skills list`, `add`, `enable`, and `disable` work against the correct scope.
+- [x] Invalid or non-matching Skills do not break a run.
+- [x] Tests prove a Skill's content appears in the prompt of an applicable Agent and not in an unrelated Agent.

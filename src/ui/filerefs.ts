@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import chalk from 'chalk';
+import { validateProjectPath } from '../filesystem';
 
 export interface FileReference {
   pattern: string;
@@ -19,12 +19,19 @@ function resolveFilePath(projectRoot: string, filePath: string): { resolved: boo
   ];
 
   for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) {
-      try {
-        const content = fs.readFileSync(candidate, 'utf-8');
-        return { resolved: true, fullPath: candidate, content };
-      } catch {}
+    if (!fs.existsSync(candidate)) continue;
+
+    let safePath: string;
+    try {
+      safePath = validateProjectPath(projectRoot, candidate);
+    } catch {
+      continue;
     }
+
+    try {
+      const content = fs.readFileSync(safePath, 'utf-8');
+      return { resolved: true, fullPath: safePath, content };
+    } catch {}
   }
 
   return { resolved: false };

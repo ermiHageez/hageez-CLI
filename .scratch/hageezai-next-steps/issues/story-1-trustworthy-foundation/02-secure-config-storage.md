@@ -4,13 +4,17 @@
 
 **Blocked by:** 01 — Test harness and CI.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Covers:** NEXT_STEPS Step 1.
 
-- [ ] A new config directory is created as `0700` and the config file as `0600`; an existing looser file is chmodded on load.
-- [ ] If chmod fails, loading fails with `CONFIG_PERMISSION_ERROR` and never continues with insecure permissions.
-- [ ] Read, parse, and write failures surface distinct stable errors.
-- [ ] Environment overrides for key, provider, and model win over the file, ignore empty values, reject an unsupported provider, and are never written back.
-- [ ] Interactive initialisation masks the key, and no command prints the key.
-- [ ] Tests use a temporary home directory and assert modes and overrides without exposing secrets.
+- [x] A new config directory is created as `0700` and the config file as `0600`; an existing looser file is chmodded on load.
+- [x] If chmod fails, loading fails with `CONFIG_PERMISSION_ERROR` and never continues with insecure permissions.
+- [x] Read, parse, and write failures surface distinct stable errors.
+- [x] Environment overrides for key, provider, and model win over the file, ignore empty values, reject an unsupported provider, and are never written back.
+- [x] Interactive initialisation masks the key, and no command prints the key.
+- [x] Tests use a temporary home directory and assert modes and overrides without exposing secrets.
+
+## Comments
+
+- 2026-10-24: Implemented in Story 1. `npm run lint`, `npm test` (58 tests), and `npm run build` pass.

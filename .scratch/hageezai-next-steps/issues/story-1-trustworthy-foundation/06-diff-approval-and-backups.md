@@ -4,14 +4,18 @@
 
 **Blocked by:** 03 — Contained write path and truthful write claim; 05 — Multi-file Build edits and extension inference.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Covers:** NEXT_STEPS Step 5.
 
-- [ ] `--dry-run` shows diffs and creates no target changes, backups, `ai-learning/`, or Session Log.
-- [ ] A normal Build previews every file before the first write and prompts per file with yes, no, or all; empty input means no.
-- [ ] `--yes` writes all files without prompting.
-- [ ] A non-TTY Build without `--yes` or `--dry-run` refuses and writes nothing.
-- [ ] Existing update/delete targets are backed up inside the project; no backup is written outside it.
-- [ ] Diff text is terminal-only and is never persisted or logged.
-- [ ] Tests cover all, partial, reject, dry-run, non-TTY, and backup behaviour.
+- [x] `--dry-run` shows diffs and creates no target changes, backups, `ai-learning/`, or Session Log.
+- [x] A normal Build previews every file before the first write and prompts per file with yes, no, or all; empty input means no.
+- [x] `--yes` writes all files without prompting.
+- [x] A non-TTY Build without `--yes` or `--dry-run` refuses and writes nothing.
+- [x] Existing update/delete targets are backed up inside the project; no backup is written outside it.
+- [x] Diff text is terminal-only and is never persisted or logged.
+- [x] Tests cover all, partial, reject, dry-run, non-TTY, and backup behaviour.
+
+## Comments
+
+- 2026-10-24: Implemented in Story 1. `npm run lint`, `npm test` (58 tests), and `npm run build` pass.

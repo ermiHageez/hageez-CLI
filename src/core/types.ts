@@ -1,15 +1,49 @@
 export type LLMProvider = 'openai' | 'anthropic' | 'grok' | 'groq';
+export type ConnectionType = LLMProvider | 'ollama' | 'openai-compatible';
 
-export interface HageezConfig {
-provider: LLMProvider;
-apiKey: string;
+export interface ConnectionConfig {
+type: ConnectionType;
+apiKey?: string;
+apiKeyEnv?: string;
+baseUrl?: string;
+maxConcurrent?: number;
+models?: string[];
+}
+
+export interface ModelReference {
+connection: string;
 model: string;
+}
+
+export interface HageezConfigV2 {
+version: 2;
+connections: Record<string, ConnectionConfig>;
+defaultModel: ModelReference;
+agents: Record<string, ModelReference>;
 maxTokens: number;
 temperature: number;
 memoryEnabled: boolean;
 ragEnabled: boolean;
 telemetryEnabled: boolean;
+timeoutMs?: number;
 }
+
+export interface ResolvedModelConfig {
+  provider: ConnectionType;
+  apiKey: string;
+  model: string;
+  maxTokens: number;
+  temperature: number;
+  memoryEnabled: boolean;
+  ragEnabled: boolean;
+  telemetryEnabled: boolean;
+  timeoutMs?: number;
+  baseUrl?: string;
+  maxConcurrent?: number;
+  connectionName: string;
+}
+
+export type HageezConfig = HageezConfigV2;
 
 export interface ProjectContext {
 path: string;
@@ -44,12 +78,16 @@ role: 'system' | 'user' | 'assistant';
 content: string;
 }
 
+export interface LLMCallOptions {
+signal?: AbortSignal;
+}
+
 export interface LLMResponse {
 content: string;
 tokensUsed: number;
 model: string;
-provider: LLMProvider;
-durationMs: number;
+  provider: ConnectionType;
+  durationMs: number;
 }
 
 export interface MemoryEntry {
@@ -70,7 +108,8 @@ task: string;
 steps: ExecutionStep[];
 tokensUsed: number;
 durationMs: number;
-outcome: 'success' | 'error' | 'partial';
+outcome: 'success' | 'error' | 'partial' | 'failed';
+error?: string;
 projectPath: string;
 }
 

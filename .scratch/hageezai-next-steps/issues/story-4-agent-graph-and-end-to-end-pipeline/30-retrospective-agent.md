@@ -4,13 +4,15 @@
 
 **Blocked by:** 24 — Code-review agent; 29 — QA test agent; 19 — Memory recall.
 
-**Status:** ready-for-agent
+**Status:** resolved
+
+**Resolution:** Implemented and verified with `npm run lint`, `npm test` (109 passing), and `npm run build`.
 
 **Covers:** NEXT_STEPS Step 16f.
 
-- [ ] The Agent reads the Run manifest and Session Log.
-- [ ] It writes at least one Decision and zero or more candidate Skills to project Memory.
-- [ ] It records only metadata and outcomes, never file contents or secrets.
-- [ ] It performs no project file writes.
-- [ ] The next Run recalls the new Decision.
-- [ ] Tests cover a successful retrospective, Memory persistence, and the no-learning case.
+- [x] The Agent reads the Run manifest and Session Log.
+- [x] It writes at least one Decision and zero or more candidate Skills to project Memory.
+- [x] It records only metadata and outcomes, never file contents or secrets.
+- [x] It performs no project file writes.
+- [x] The next Run recalls the new Decision.
+- [x] Tests cover a successful retrospective, Memory persistence, and the no-learning case.

@@ -4,13 +4,15 @@
 
 **Blocked by:** 21 — Analyst agent; 25 — Product-brief agent.
 
-**Status:** ready-for-agent
+**Status:** resolved
+
+**Resolution:** Implemented and verified with `npm run lint`, `npm test` (109 passing), and `npm run build`.
 
 **Covers:** NEXT_STEPS Step 16b.
 
-- [ ] The Agent consumes both the analysis and brief artifacts.
-- [ ] It writes a `design` artifact covering components, interfaces, data flow, and trade-offs.
-- [ ] It produces draft ADRs as artifacts, marked draft, without bypassing the approval gate.
-- [ ] Any project ADR file is written only by the Build Agent after approval.
-- [ ] It writes artifacts only and runs through the orchestrator.
-- [ ] Tests cover design structure, draft ADRs, and the single-writer boundary.
+- [x] The Agent consumes both the analysis and brief artifacts.
+- [x] It writes a `design` artifact covering components, interfaces, data flow, and trade-offs.
+- [x] It produces draft ADRs as artifacts, marked draft, without bypassing the approval gate.
+- [x] Any project ADR file is written only by the Build Agent after approval.
+- [x] It writes artifacts only and runs through the orchestrator.
+- [x] Tests cover design structure, draft ADRs, and the single-writer boundary.

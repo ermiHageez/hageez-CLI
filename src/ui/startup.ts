@@ -1,22 +1,70 @@
 import chalk from 'chalk';
+import * as fs from 'fs';
 import * as os from 'os';
+import * as path from 'path';
 import { theme, label, value, VERSION, separator } from './theme';
-import { HageezConfig, ProjectContext } from '../core';
+import { HageezConfig, ProjectContext, resolveApiKey, getConnection } from '../core';
+import { listDecisions } from '../memory';
 
 export interface StartupOptions {
   config?: HageezConfig;
   project?: ProjectContext;
 }
 
+export interface StartupStatusItem {
+  label: string;
+  ok: boolean;
+  neutral?: boolean;
+  detail?: string;
+}
+
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-const statusItems = [
-  'Connected',
-  'Memory Enabled',
-  'RAG Enabled',
-  'Git Connected',
-  'Project Loaded',
-];
+export function getStartupStatusItems(
+  opts: StartupOptions = {},
+  cwd = process.cwd()
+): StartupStatusItem[] {
+  const hasConfig = Boolean(opts.config);
+  const hasKey = opts.config
+    ? getConnection(opts.config, opts.config.defaultModel.connection).type === 'ollama' || Boolean(resolveApiKey(opts.config, opts.config.defaultModel.connection))
+    : false;
+  const hasGit = fs.existsSync(path.join(cwd, '.git'));
+  const hasAiLearning = fs.existsSync(path.join(cwd, 'ai-learning'));
+
+  const decisions = listDecisions(cwd).length;
+  return [
+    {
+      label: 'Config & API key',
+      ok: hasConfig && hasKey,
+      detail: !hasConfig ? 'Not configured' : !hasKey ? 'No API key' : undefined,
+    },
+    {
+      label: 'Git repository',
+      ok: hasGit,
+      detail: hasGit ? undefined : 'Not a git repository',
+    },
+    {
+      label: 'ai-learning/',
+      ok: hasAiLearning,
+      detail: hasAiLearning ? undefined : 'Not created yet',
+    },
+    {
+      label: 'Project loaded',
+      ok: Boolean(opts.project),
+      detail: opts.project ? undefined : 'Project scan unavailable',
+    },
+    {
+      label: decisions > 0 ? `Memory ${decisions} Decision(s)` : 'Memory ready (no Decisions yet)',
+      ok: decisions > 0,
+      neutral: decisions === 0,
+    },
+    {
+      label: 'RAG off (not implemented)',
+      ok: false,
+      neutral: true,
+    },
+  ];
+}
 
 function clearLine(): void {
   process.stdout.write('\r\x1b[K');
@@ -34,28 +82,36 @@ function renderLogo(): void {
   }
 }
 
-async function animateStatusItems(): Promise<void> {
+async function animateStatusItems(items: StartupStatusItem[]): Promise<void> {
   const spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-  let frame = 0;
 
-  for (const item of statusItems) {
-    // Show spinner
+  for (const item of items) {
     let spinFrame = 0;
     const spinTimer = setInterval(() => {
       clearLine();
-      process.stdout.write(`  ${chalk.hex('#39FF14')(spinner[spinFrame % spinner.length])} ${item}`);
+      process.stdout.write(`  ${chalk.hex('#39FF14')(spinner[spinFrame % spinner.length])} ${item.label}`);
       spinFrame++;
     }, 60);
 
     await delay(200);
     clearInterval(spinTimer);
     clearLine();
-    process.stdout.write(`  ${chalk.hex('#39FF14')('✔')} ${item}\n`);
+
+    const icon = item.ok
+      ? chalk.hex('#39FF14')('✔')
+      : chalk.dim('○');
+    const detail = item.detail ? chalk.dim(` — ${item.detail}`) : '';
+    process.stdout.write(`  ${icon} ${item.label}${detail}\n`);
   }
 }
 
 function renderProjectContext(project?: ProjectContext): string {
-  if (!project) return '';
+  if (!project || (project.filesScanned === 0 && !project.language && !project.framework)) {
+    return [
+      '',
+      label('  Project  : ') + value('No project found here'),
+    ].join('\n');
+  }
   return [
     '',
     label('  Project  : ') + value(project.name),
@@ -82,16 +138,16 @@ function renderTips(): string {
 }
 
 function renderFooter(project?: ProjectContext, config?: HageezConfig): string {
-  const cwd = process.cwd().replace(os.homedir(), '~');
+  const isProj = Boolean(project && (project.filesScanned > 0 || project.language || project.framework));
+  const cwd = isProj ? process.cwd().replace(os.homedir(), '~') : 'No project found here';
   const branch = project?.branch ?? 'main';
-  const model = config?.model ?? 'HageezAI-v1';
+  const model = config?.defaultModel?.model ?? 'HageezAI-v1';
   return [
     separator(),
     `  ${chalk.dim('Project:')} ${chalk.white(cwd)}`,
     `  ${chalk.dim('Branch:')}   ${chalk.green(branch)}`,
     `  ${chalk.dim('Model:')}    ${chalk.cyan(model)}`,
-    `  ${chalk.dim('Context:')}  ${chalk.cyan('128k')}`,
-    `  ${chalk.dim('Sandbox:')}  ${chalk.green('Enabled')}`,
+    `  ${chalk.dim('Writes:')}   ${chalk.yellow('direct (review changes with git)')}`,
     `  ${chalk.dim('Mode:')}     ${chalk.hex('#39FF14')('build')} ${chalk.dim('|')} ${chalk.cyan('plan')}  ${chalk.dim('(Tab to switch)')}`,
   ].join('\n');
 }
@@ -108,7 +164,7 @@ export async function runStartup(opts: StartupOptions = {}): Promise<void> {
   console.log('');
 
   // Animate status items
-  await animateStatusItems();
+  await animateStatusItems(getStartupStatusItems(opts));
 
   // Project context
   const ctx = renderProjectContext(opts.project);

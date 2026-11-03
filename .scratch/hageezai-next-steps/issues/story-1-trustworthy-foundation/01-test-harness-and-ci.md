@@ -4,12 +4,16 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Covers:** NEXT_STEPS Step 8, test-harness portion.
 
-- [ ] `npm test` compiles the tests separately and runs them with `node:test`.
-- [ ] `npm run lint` type-checks both the shipped source and the tests.
-- [ ] CI installs from the lockfile, then runs lint, build, and test on Node 22.12.
-- [ ] Compiled test output is excluded from version control.
-- [ ] Initial smoke tests exercise existing public behaviour without changing runtime behaviour.
+- [x] `npm test` compiles the tests separately and runs them with `node:test`.
+- [x] `npm run lint` type-checks both the shipped source and the tests.
+- [x] CI installs from the lockfile, then runs lint, build, and test on Node 22.12.
+- [x] Compiled test output is excluded from version control.
+- [x] Initial smoke tests exercise existing public behaviour without changing runtime behaviour.
+
+## Comments
+
+- 2026-10-24: Implemented in Story 1. `npm run lint`, `npm test` (58 tests), and `npm run build` pass.
